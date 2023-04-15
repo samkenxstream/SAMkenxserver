@@ -117,7 +117,7 @@ This field is helpful if:
 
 <td>
 
-You can use this field to integrate your server with [Apollo Gateway](/federation/api/apollo-gateway/).
+You can use this field to integrate your server with [Apollo Gateway](../using-federation/api/apollo-gateway/).
 
 </td>
 </tr>
@@ -471,6 +471,23 @@ An object that specifies how your server parses GraphQL operations. [See `graphq
 <td>
 
 If this is set to any string value, use that value instead of the environment variable `NODE_ENV` for the features whose defaults depend on `NODE_ENV` (such as [`introspection`](#introspection)). Note that passing the empty string here is equivalent to running with the `NODE_ENV` environment variable unset. This is primarily meant for testing the effects of the `NODE_ENV` environment variable.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+###### `status400ForVariableCoercionErrors`
+
+`boolean`
+
+</td>
+<td>
+
+**Set this option to `true`.** It mitigates a regression introduced in Apollo Server v4 where the server returns a 200 status code (instead of 400) when a client query provides invalid variables. [Learn more.](../migration/#known-regressions)
+
+Apollo Server v5 will _always_ behave as if this option is `true` (and will ignore any provided value).
 
 </td>
 </tr>
