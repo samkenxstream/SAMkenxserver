@@ -102,7 +102,13 @@ class ProductsDataSource {
 
   private batchProducts = new DataLoader(async (ids) => {
     const productList = await this.dbConnection.fetchAllKeys(ids);
-    return ids.map((id) => productList.find((product) => product.id === id));
+    // Dataloader expects you to return a list with the results ordered just like the list in the arguments were
+    // Since the database might return the results in a different order the following code sorts the results accordingly
+    const productIdToProductMap = productList.reduce((mapping, product) => {
+        mapping[product.id] = product;
+        return mapping;
+    }, {});
+    return ids.map((id) => productIdToProductMap[id]);
   });
 
   async getProductFor(id) {
@@ -259,7 +265,7 @@ import { KeyValueCache } from '@apollo/utils.keyvaluecache';
 import { Pool } from 'undici';
 import { HTTPDataSource } from 'apollo-datasource-http';
 
-class BooksAPI extends HTTPDataSource {
+class MoviesAPI extends HTTPDataSource {
   override baseURL = 'https://movies-api.example.com/';
 
   //highlight-start

@@ -24,6 +24,7 @@ export const getEmbeddedExplorerHTML = (
   explorerCdnVersion: string,
   config: ApolloServerPluginEmbeddedLandingPageProductionDefaultOptions,
   apolloServerVersion: string,
+  nonce: string,
 ) => {
   interface EmbeddableExplorerOptions {
     graphRef: string;
@@ -46,10 +47,13 @@ export const getEmbeddedExplorerHTML = (
     endpointUrl: string;
 
     includeCookies?: boolean; // defaults to 'false'
+
+    runTelemetry?: boolean;
   }
-  const productionLandingPageConfigOrDefault = {
+  const productionLandingPageEmbedConfigOrDefault = {
     displayOptions: {},
     persistExplorerState: false,
+    runTelemetry: true,
     ...(typeof config.embed === 'boolean' ? {} : config.embed),
   };
   const embeddedExplorerParams: Omit<
@@ -73,13 +77,14 @@ export const getEmbeddedExplorerHTML = (
           }
         : {}),
       displayOptions: {
-        ...productionLandingPageConfigOrDefault.displayOptions,
+        ...productionLandingPageEmbedConfigOrDefault.displayOptions,
       },
     },
     persistExplorerState:
-      productionLandingPageConfigOrDefault.persistExplorerState,
+      productionLandingPageEmbedConfigOrDefault.persistExplorerState,
     includeCookies: config.includeCookies,
     runtime: apolloServerVersion,
+    runTelemetry: productionLandingPageEmbedConfigOrDefault.runTelemetry,
   };
 
   return `
@@ -96,12 +101,12 @@ export const getEmbeddedExplorerHTML = (
 style="width: 100vw; height: 100vh; position: absolute; top: 0;"
 id="embeddableExplorer"
 ></div>
-<script src="https://embeddable-explorer.cdn.apollographql.com/${encodeURIComponent(
+<script nonce="${nonce}" src="https://embeddable-explorer.cdn.apollographql.com/${encodeURIComponent(
     explorerCdnVersion,
   )}/embeddable-explorer.umd.production.min.js?runtime=${encodeURIComponent(
     apolloServerVersion,
   )}"></script>
-<script>
+<script nonce="${nonce}">
   var endpointUrl = window.location.href;
   var embeddedExplorerConfig = ${getConfigStringForHtml(
     embeddedExplorerParams,
@@ -118,38 +123,17 @@ export const getEmbeddedSandboxHTML = (
   sandboxCdnVersion: string,
   config: ApolloServerPluginEmbeddedLandingPageLocalDefaultOptions,
   apolloServerVersion: string,
+  nonce: string,
 ) => {
-  const endpointIsEditable =
-    typeof config.embed === 'boolean'
-      ? false
-      : typeof config.embed?.endpointIsEditable === 'boolean'
-      ? config.embed?.endpointIsEditable
-      : false;
-  return `
-<div class="fallback">
-  <h1>Welcome to Apollo Server</h1>
-  <p>Apollo Sandbox cannot be loaded; it appears that you might be offline.</p>
-</div>
-<style>
-  iframe {
-    background-color: white;
-  }
-</style>
-<div
-style="width: 100vw; height: 100vh; position: absolute; top: 0;"
-id="embeddableSandbox"
-></div>
-<script src="https://embeddable-sandbox.cdn.apollographql.com/${encodeURIComponent(
-    sandboxCdnVersion,
-  )}/embeddable-sandbox.umd.production.min.js?runtime=${encodeURIComponent(
-    apolloServerVersion,
-  )}"></script>
-<script>
-  var initialEndpoint = window.location.href;
-  new window.EmbeddedSandbox({
+  const localDevelopmentEmbedConfigOrDefault = {
+    runTelemetry: true,
+    endpointIsEditable: false,
+    initialState: {},
+    ...(typeof config.embed === 'boolean' ? {} : config.embed ?? {}),
+  };
+  const embeddedSandboxConfig = {
     target: '#embeddableSandbox',
-    initialEndpoint,
-    initialState: ${getConfigStringForHtml({
+    initialState: {
       ...('document' in config || 'headers' in config || 'variables' in config
         ? {
             document: config.document,
@@ -164,24 +148,41 @@ id="embeddableSandbox"
           }
         : {}),
       includeCookies: config.includeCookies,
-      ...(typeof config.embed !== 'boolean' &&
-      config.embed?.initialState?.pollForSchemaUpdates !== undefined
-        ? {
-            pollForSchemaUpdates:
-              config.embed?.initialState?.pollForSchemaUpdates,
-          }
-        : {}),
-      ...(typeof config.embed !== 'boolean' &&
-      config.embed?.initialState?.sharedHeaders !== undefined
-        ? {
-            sharedHeaders: config.embed?.initialState?.sharedHeaders,
-          }
-        : {}),
-    })},
+      ...localDevelopmentEmbedConfigOrDefault.initialState,
+    },
     hideCookieToggle: false,
-    endpointIsEditable: ${endpointIsEditable},
-    runtime: '${apolloServerVersion}'
-  });
+    endpointIsEditable: localDevelopmentEmbedConfigOrDefault.endpointIsEditable,
+    runtime: apolloServerVersion,
+    runTelemetry: localDevelopmentEmbedConfigOrDefault.runTelemetry,
+  };
+  return `
+<div class="fallback">
+  <h1>Welcome to Apollo Server</h1>
+  <p>Apollo Sandbox cannot be loaded; it appears that you might be offline.</p>
+</div>
+<style>
+  iframe {
+    background-color: white;
+  }
+</style>
+<div
+style="width: 100vw; height: 100vh; position: absolute; top: 0;"
+id="embeddableSandbox"
+></div>
+<script nonce="${nonce}" src="https://embeddable-sandbox.cdn.apollographql.com/${encodeURIComponent(
+    sandboxCdnVersion,
+  )}/embeddable-sandbox.umd.production.min.js?runtime=${encodeURIComponent(
+    apolloServerVersion,
+  )}"></script>
+<script nonce="${nonce}">
+  var initialEndpoint = window.location.href;
+  var embeddedSandboxConfig = ${getConfigStringForHtml(embeddedSandboxConfig)};
+  new window.EmbeddedSandbox(
+    {
+      ...embeddedSandboxConfig,
+      initialEndpoint,
+    }
+  );
 </script>
 `;
 };

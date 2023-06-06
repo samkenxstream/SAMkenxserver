@@ -1,5 +1,48 @@
 # @apollo/server
 
+## 4.7.2
+
+### Patch Changes
+
+- [#7599](https://github.com/apollographql/apollo-server/pull/7599) [`c3f04d050`](https://github.com/apollographql/apollo-server/commit/c3f04d050d24585bc0e285b51e8798b0cc5d1a34) Thanks [@trevor-scheer](https://github.com/trevor-scheer)! - Update `@apollo/utils.usagereporting` dependency. Previously, installing `@apollo/gateway` and `@apollo/server` could result in duplicate / differently versioned installs of `@apollo/usage-reporting-protobuf`. This is because the `@apollo/server-gateway-interface` package was updated to use the latest protobuf, but the `@apollo/utils.usagereporting` package was not. After this change, users should always end up with a single install of the protobuf package when installing both `@apollo/server` and `@apollo/gateway` latest versions.
+
+## 4.7.1
+
+### Patch Changes
+
+- [#7539](https://github.com/apollographql/apollo-server/pull/7539) [`5d3c45be9`](https://github.com/apollographql/apollo-server/commit/5d3c45be9d871ac1ccc2e5cce70fcd60591f39a4) Thanks [@mayakoneval](https://github.com/mayakoneval)! - 🐛 Bug Fix for Apollo Server Landing Pages on Safari. A Content Security Policy was added to our landing page html so that Safari can run the inline scripts we use to call the Embedded Sandbox & Explorer.
+
+## 4.7.0
+
+### Minor Changes
+
+- [#7504](https://github.com/apollographql/apollo-server/pull/7504) [`22a5be934`](https://github.com/apollographql/apollo-server/commit/22a5be9347bbdb6aef4c158f9c81d310308d02d4) Thanks [@mayakoneval](https://github.com/mayakoneval)! - In the Apollo Server Landing Page Local config, you can now opt out of the telemetry that Apollo Studio runs in the
+  embedded Sandbox & Explorer landing pages. This telemetry includes Google Analytics for event tracking and
+  Sentry for error tracking.
+
+  Example of the new config option:
+
+  ```
+  const server = new ApolloServer({
+    typeDefs,
+    resolvers,
+    plugins: [
+      process.env.NODE_ENV === 'production'
+        ? ApolloServerPluginLandingPageProductionDefault({
+            graphRef: 'my-graph-id@my-graph-variant',
+            embed: {
+              runTelemetry: false
+            },
+          })
+        : ApolloServerPluginLandingPageLocalDefault({
+            embed: {
+              runTelemetry: false
+            },
+          }),
+    ],
+  });
+  ```
+
 ## 4.6.0
 
 ### Minor Changes
